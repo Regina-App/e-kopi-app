@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import {
@@ -41,6 +41,22 @@ import {
 
 export default function AboutPage() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
+  const [qrisUrl, setQrisUrl] = useState<string>('')
+  const [companyName, setCompanyName] = useState<string>('PT E-KOPI INDONESIA')
+
+  useEffect(() => {
+    fetch('/api/admin/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.settings?.donation_qr_url) {
+          setQrisUrl(data.settings.donation_qr_url)
+        }
+        if (data?.settings?.company_name) {
+          setCompanyName(data.settings.company_name)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
@@ -244,49 +260,34 @@ export default function AboutPage() {
             onClick={() => setIsQrModalOpen(true)}
             className="group relative cursor-pointer rounded-2xl bg-white p-4 shadow-md border border-slate-200 transition-all hover:shadow-xl dark:bg-slate-800 dark:border-slate-700"
           >
-            {/* QR Code SVG Visual */}
-            <div className="relative flex flex-col items-center justify-center w-48 h-48 bg-slate-50 dark:bg-slate-900 rounded-xl p-2 border border-dashed border-slate-300 dark:border-slate-700">
-              <svg
-                viewBox="0 0 100 100"
-                className="w-full h-full text-slate-900 dark:text-white"
-                fill="currentColor"
-              >
-                {/* Simulated QR Code Pattern */}
-                <rect x="10" y="10" width="24" height="24" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
-                <rect x="16" y="16" width="12" height="12" rx="1" />
-                <rect x="66" y="10" width="24" height="24" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
-                <rect x="72" y="16" width="12" height="12" rx="1" />
-                <rect x="10" y="66" width="24" height="24" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
-                <rect x="16" y="72" width="12" height="12" rx="1" />
-                {/* Random Pattern Nodes */}
-                <rect x="42" y="12" width="6" height="6" />
-                <rect x="52" y="18" width="6" height="6" />
-                <rect x="42" y="28" width="6" height="6" />
-                <rect x="12" y="42" width="6" height="6" />
-                <rect x="24" y="48" width="6" height="6" />
-                <rect x="42" y="42" width="16" height="16" rx="2" />
-                <rect x="66" y="42" width="6" height="6" />
-                <rect x="78" y="48" width="6" height="6" />
-                <rect x="42" y="66" width="6" height="6" />
-                <rect x="52" y="74" width="6" height="6" />
-                <rect x="66" y="66" width="6" height="6" />
-                <rect x="78" y="74" width="6" height="6" />
-                <rect x="72" y="84" width="12" height="6" />
-                <rect x="48" y="84" width="6" height="6" />
-              </svg>
+            {/* QR Code Container */}
+            <div className="relative flex flex-col items-center justify-center w-52 h-52 bg-slate-50 dark:bg-slate-900 rounded-xl p-3 border border-dashed border-slate-300 dark:border-slate-700">
+              {qrisUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={qrisUrl}
+                  alt="QRIS Donasi"
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center p-2 text-slate-500">
+                  <Heart className="w-8 h-8 text-rose-500 mb-1" />
+                  <span className="text-xs font-semibold">QR Belum Diunggah</span>
+                </div>
+              )}
 
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-xl backdrop-blur-xs transition-opacity text-white text-xs font-semibold gap-1.5">
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 rounded-xl backdrop-blur-xs transition-opacity text-white text-xs font-semibold gap-1.5">
                 <Maximize2 className="h-4 w-4" />
                 <span>Perbesar QR</span>
               </div>
             </div>
 
-            <p className="mt-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <p className="mt-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
               QRIS / ShopeePay / GoPay / OVO
             </p>
           </motion.div>
 
-          <span className="mt-2 text-xs text-slate-400">
+          <span className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             Klik kode QR di atas untuk memperbesar tampilan
           </span>
         </div>
@@ -294,50 +295,36 @@ export default function AboutPage() {
 
       {/* FULL-SIZE QR DIALOG */}
       <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
-        <DialogContent className="sm:max-w-md rounded-3xl text-center">
+        <DialogContent className="sm:max-w-md rounded-3xl text-center bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
           <DialogHeader>
-            <DialogTitle className="text-center font-bold text-lg">
+            <DialogTitle className="text-center font-bold text-lg text-slate-900 dark:text-white">
               QRIS Donasi E-KOPI
             </DialogTitle>
-            <DialogDescription className="text-center text-xs text-slate-500">
+            <DialogDescription className="text-center text-xs text-slate-600 dark:text-slate-400">
               Scan melalui aplikasi mobile banking atau e-wallet pilihan Anda.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col items-center justify-center py-4">
-            <div className="w-64 h-64 p-4 rounded-2xl bg-white border border-slate-200 shadow-lg flex items-center justify-center">
-              <svg
-                viewBox="0 0 100 100"
-                className="w-full h-full text-slate-900"
-                fill="currentColor"
-              >
-                <rect x="10" y="10" width="24" height="24" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
-                <rect x="16" y="16" width="12" height="12" rx="1" />
-                <rect x="66" y="10" width="24" height="24" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
-                <rect x="72" y="16" width="12" height="12" rx="1" />
-                <rect x="10" y="66" width="24" height="24" rx="2" fill="none" stroke="currentColor" strokeWidth="4" />
-                <rect x="16" y="72" width="12" height="12" rx="1" />
-                <rect x="42" y="12" width="6" height="6" />
-                <rect x="52" y="18" width="6" height="6" />
-                <rect x="42" y="28" width="6" height="6" />
-                <rect x="12" y="42" width="6" height="6" />
-                <rect x="24" y="48" width="6" height="6" />
-                <rect x="42" y="42" width="16" height="16" rx="2" />
-                <rect x="66" y="42" width="6" height="6" />
-                <rect x="78" y="48" width="6" height="6" />
-                <rect x="42" y="66" width="6" height="6" />
-                <rect x="52" y="74" width="6" height="6" />
-                <rect x="66" y="66" width="6" height="6" />
-                <rect x="78" y="74" width="6" height="6" />
-                <rect x="72" y="84" width="12" height="6" />
-                <rect x="48" y="84" width="6" height="6" />
-              </svg>
+            <div className="w-72 h-72 p-4 rounded-2xl bg-white border border-slate-200 dark:border-slate-800 shadow-lg flex items-center justify-center">
+              {qrisUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={qrisUrl}
+                  alt="QRIS Donasi Full"
+                  className="w-full h-full object-contain rounded-xl"
+                />
+              ) : (
+                <div className="text-center text-slate-500">
+                  <p className="text-sm font-semibold">QRIS Belum Tersedia</p>
+                </div>
+              )}
             </div>
-            <p className="mt-3 font-semibold text-slate-800 text-sm">
-              E-KOPI Development Fund
+            <p className="mt-3 font-semibold text-slate-900 dark:text-slate-100 text-sm">
+              {companyName} - Development Fund
             </p>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">
-              NMID: ID1020038472910
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-mono mt-0.5">
+              QRIS Dinamis Resmi
             </p>
           </div>
 
@@ -345,7 +332,7 @@ export default function AboutPage() {
             <Button
               variant="outline"
               onClick={() => setIsQrModalOpen(false)}
-              className="rounded-xl px-6"
+              className="rounded-xl px-6 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Tutup
             </Button>

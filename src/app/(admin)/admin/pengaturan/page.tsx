@@ -38,7 +38,7 @@ interface MasterItem {
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<
-    'identitas' | 'perusahaan' | 'master' | 'cuti' | 'koperasi' | 'aset' | 'backup'
+    'identitas' | 'perusahaan' | 'cuti' | 'koperasi' | 'aset' | 'backup'
   >('identitas')
   const [activeMasterSubTab, setActiveMasterSubTab] = useState<
     'companies' | 'sites' | 'departments' | 'positions' | 'crews'
@@ -361,7 +361,6 @@ export default function AdminSettingsPage() {
         {[
           { key: 'identitas', label: 'Identitas', icon: Settings },
           { key: 'perusahaan', label: 'Perusahaan', icon: Building },
-          { key: 'master', label: 'Master Data', icon: Database },
           { key: 'cuti', label: 'Cuti', icon: Calendar },
           { key: 'koperasi', label: 'Koperasi', icon: Wallet },
           { key: 'aset', label: 'Aset', icon: ImageIcon },
@@ -532,125 +531,6 @@ export default function AdminSettingsPage() {
                 <Save className="w-4 h-4 mr-2" />
                 Simpan Profil Perusahaan
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 3. MASTER DATA TAB */}
-      {activeTab === 'master' && (
-        <Card className="border-slate-200 shadow-xs">
-          <CardHeader className="py-4 px-6 bg-slate-50 border-b border-slate-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <CardTitle className="text-base font-bold text-slate-900">Pengelolaan Master Data</CardTitle>
-                <CardDescription className="text-xs text-slate-500">
-                  Data referensi struktur organisasi: Perusahaan, Site, Departemen, Jabatan, dan Regu
-                </CardDescription>
-              </div>
-              <Button onClick={openAddModal} size="sm" className="bg-blue-700 hover:bg-blue-800">
-                <Plus className="w-4 h-4 mr-1.5" />
-                Tambah Baru
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            {/* Sub-tabs */}
-            <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3 mb-4">
-              {[
-                { key: 'companies', label: 'Perusahaan' },
-                { key: 'sites', label: 'Site / Lokasi' },
-                { key: 'departments', label: 'Departemen' },
-                { key: 'positions', label: 'Jabatan' },
-                { key: 'crews', label: 'Regu Kerja' },
-              ].map((sub) => (
-                <button
-                  key={sub.key}
-                  onClick={() => setActiveMasterSubTab(sub.key as any)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                    activeMasterSubTab === sub.key
-                      ? 'bg-blue-700 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {sub.label} ({masterData[sub.key as keyof typeof masterData]?.length || 0})
-                </button>
-              ))}
-            </div>
-
-            {/* Table */}
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <table className="w-full text-left text-xs text-slate-700">
-                <thead className="bg-slate-50 text-slate-800 font-bold border-b border-slate-200">
-                  <tr>
-                    <th className="py-2.5 px-3 w-12 text-center">NO</th>
-                    <th className="py-2.5 px-3">NAMA</th>
-                    {activeMasterSubTab === 'sites' && <th className="py-2.5 px-3">PERUSAHAAN</th>}
-                    <th className="py-2.5 px-3 text-center w-28">STATUS</th>
-                    <th className="py-2.5 px-3 text-center w-28">AKSI</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {masterData[activeMasterSubTab]?.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-slate-400">
-                        Belum ada data master pada kategori ini.
-                      </td>
-                    </tr>
-                  ) : (
-                    masterData[activeMasterSubTab]?.map((item, idx) => {
-                      const comp =
-                        activeMasterSubTab === 'sites'
-                          ? masterData.companies.find((c) => c.id === item.company_id)
-                          : null
-
-                      return (
-                        <tr key={item.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-3 text-center font-medium text-slate-400">
-                            {idx + 1}
-                          </td>
-                          <td className="py-2.5 px-3 font-semibold text-slate-900">{item.name}</td>
-                          {activeMasterSubTab === 'sites' && (
-                            <td className="py-2.5 px-3 text-slate-600">{comp?.name || '-'}</td>
-                          )}
-                          <td className="py-2.5 px-3 text-center">
-                            <button
-                              onClick={() => handleToggleStatus(item)}
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors ${
-                                item.is_active
-                                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                  : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                              }`}
-                            >
-                              {item.is_active ? 'AKTIF' : 'NONAKTIF'}
-                            </button>
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openEditModal(item)}
-                                className="h-7 w-7 p-0 text-blue-600 hover:bg-blue-50"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteItem(item)}
-                                className="h-7 w-7 p-0 text-rose-600 hover:bg-rose-50"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })
-                  )}
-                </tbody>
-              </table>
             </div>
           </CardContent>
         </Card>
@@ -1112,73 +992,6 @@ export default function AdminSettingsPage() {
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* MODAL ADD / EDIT MASTER DATA */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
-              <h3 className="text-sm font-bold">
-                {editingItem ? 'Edit Data Master' : 'Tambah Data Master Baru'}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <form onSubmit={handleModalSave} className="p-5 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Nama {activeMasterSubTab.slice(0, -1)}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={modalName}
-                  onChange={(e) => setModalName(e.target.value)}
-                  placeholder="Masukkan nama..."
-                  className="w-full h-10 px-3 text-sm rounded-md border border-slate-300 focus:ring-2 focus:ring-blue-600"
-                />
-              </div>
-
-              {activeMasterSubTab === 'sites' && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Perusahaan Terkait
-                  </label>
-                  <select
-                    value={modalCompanyId}
-                    onChange={(e) => setModalCompanyId(e.target.value)}
-                    className="w-full h-10 px-3 text-sm rounded-md border border-slate-300 focus:ring-2 focus:ring-blue-600"
-                  >
-                    {masterData.companies.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={modalSubmitting}
-                >
-                  Batal
-                </Button>
-                <Button type="submit" disabled={modalSubmitting} className="bg-blue-700 hover:bg-blue-800">
-                  {modalSubmitting ? 'Menyimpan...' : 'Simpan Data'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
       )}
     </div>
   )

@@ -339,12 +339,11 @@ export default function AnnouncementPopup({ forceShow = false }: AnnouncementPop
                               onClick={() => setShowQrModal(true)}
                               className="relative cursor-pointer group rounded-xl overflow-hidden border-2 border-slate-300 shadow-md hover:scale-105 transition-transform"
                             >
-                              <Image
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
                                 src={qrisUrl}
                                 alt="QRIS Donasi"
-                                width={180}
-                                height={180}
-                                className="object-contain"
+                                className="w-44 h-44 object-contain rounded-lg"
                               />
                               <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-semibold gap-1">
                                 <Maximize2 className="w-4 h-4" />
@@ -403,13 +402,12 @@ export default function AnnouncementPopup({ forceShow = false }: AnnouncementPop
               <div className="font-extrabold text-slate-900 text-lg mb-1">QRIS Donasi E-KOPI</div>
               <p className="text-xs text-slate-500 mb-4">Scan langsung dari aplikasi m-banking atau e-wallet Anda</p>
 
-              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 mb-4">
-                <Image
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 mb-4 flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={qrisUrl}
                   alt="QRIS Donasi Full"
-                  width={260}
-                  height={260}
-                  className="object-contain rounded-xl"
+                  className="w-64 h-64 object-contain rounded-xl"
                 />
               </div>
 

@@ -21,6 +21,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -199,39 +200,40 @@ export default function AdminLayout({
       </aside>
 
       {/* Top Bar */}
-      <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-white border-b border-slate-200 z-30 px-4 flex items-center justify-between">
+      <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-30 px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden"
+            className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
             aria-label="Buka menu"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="text-slate-400 hidden sm:inline">Admin</span>
-            <span className="text-slate-300 hidden sm:inline">/</span>
-            <span className="font-semibold text-slate-800">
+          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+            <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">Admin</span>
+            <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">/</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-100">
               {activeNavItem?.label || 'Dashboard'}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 pl-2">
-            <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-semibold text-xs flex items-center justify-center ring-2 ring-blue-100">
+          <ThemeToggle />
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+            <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-semibold text-xs flex items-center justify-center ring-2 ring-blue-100 dark:ring-blue-900">
               {adminUser?.name ? adminUser.name.slice(0, 2).toUpperCase() : 'AD'}
             </div>
             <div className="hidden sm:block text-xs">
-              <div className="font-semibold text-slate-700 leading-tight">{adminUser?.name || 'Administrator'}</div>
-              <div className="text-[10px] text-slate-400">{adminUser?.email || ''}</div>
+              <div className="font-semibold text-slate-700 dark:text-slate-200 leading-tight">{adminUser?.name || 'Administrator'}</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500">{adminUser?.email || ''}</div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="lg:ml-64 pt-14 p-6 min-h-screen bg-slate-50">
+      <main className="lg:ml-64 pt-14 p-6 min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>

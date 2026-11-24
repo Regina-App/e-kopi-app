@@ -169,6 +169,7 @@ export default function AdminKaryawanPage() {
   // Delete Modal State
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [targetDeleteEmp, setTargetDeleteEmp] = useState<EmployeeItem | null>(null)
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
 
   // Import Excel State
   const [importOpen, setImportOpen] = useState(false)
@@ -456,6 +457,42 @@ export default function AdminKaryawanPage() {
     }
   }
 
+  // Quick 1-Click Approve for individual pending employee
+  const handleQuickApprove = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/employees/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        fetchEmployees()
+      } else {
+        alert(data.error || 'Gagal menyetujui pendaftaran.')
+      }
+    } catch {
+      alert('Terjadi kesalahan sistem saat menyetujui.')
+    }
+  }
+
+  // Bulk Delete
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    try {
+      for (const id of selectedIds) {
+        await fetch(`/api/admin/employees/${id}`, {
+          method: 'DELETE',
+        })
+      }
+      setSelectedIds([])
+      setBulkDeleteConfirmOpen(false)
+      fetchEmployees()
+    } catch {
+      alert('Terjadi kesalahan saat menghapus massal.')
+    }
+  }
+
   // Bulk Add Quota trigger
   const handleBulkAddQuota = () => {
     if (selectedIds.length === 0) return
@@ -554,6 +591,69 @@ export default function AdminKaryawanPage() {
         }
       />
 
+      {/* Dedicated Status Filter Tabs (Fitur Khusus Persetujuan Karyawan Baru) */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
+        <button
+          onClick={() => {
+            setStatusFilter('all')
+            setPage(1)
+          }}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            statusFilter === 'all'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          Semua Karyawan ({total})
+        </button>
+
+        <button
+          onClick={() => {
+            setStatusFilter('pending')
+            setPage(1)
+          }}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            statusFilter === 'pending'
+              ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300'
+              : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300'
+          }`}
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          </span>
+          <span>Menunggu Persetujuan</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setStatusFilter('approved')
+            setPage(1)
+          }}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            statusFilter === 'approved'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          Aktif (Disetujui)
+        </button>
+
+        <button
+          onClick={() => {
+            setStatusFilter('rejected')
+            setPage(1)
+          }}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            statusFilter === 'rejected'
+              ? 'bg-rose-600 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          Ditolak
+        </button>
+      </div>
+
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
         <div className="flex flex-1 items-center gap-3">
@@ -615,15 +715,15 @@ export default function AdminKaryawanPage() {
 
         {/* Bulk Action Toolbar */}
         {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-slate-600 font-semibold">
               {selectedIds.length} dipilih
             </span>
             <Button
               size="sm"
               variant="outline"
               onClick={handleBulkApprove}
-              className="h-8 text-xs text-emerald-700 border-emerald-300 hover:bg-emerald-50 gap-1.5"
+              className="h-8 text-xs text-emerald-700 border-emerald-300 hover:bg-emerald-50 gap-1.5 font-semibold"
             >
               <Check className="w-3.5 h-3.5" />
               <span>Setujui Dipilih</span>
@@ -632,10 +732,19 @@ export default function AdminKaryawanPage() {
               size="sm"
               variant="outline"
               onClick={handleBulkAddQuota}
-              className="h-8 text-xs text-blue-700 border-blue-300 hover:bg-blue-50 gap-1.5"
+              className="h-8 text-xs text-blue-700 border-blue-300 hover:bg-blue-50 gap-1.5 font-semibold"
             >
               <CalendarPlus className="w-3.5 h-3.5" />
               <span>Tambah Kuota</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setBulkDeleteConfirmOpen(true)}
+              className="h-8 text-xs text-rose-700 border-rose-300 hover:bg-rose-50 gap-1.5 font-semibold"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span>Hapus Massal</span>
             </Button>
           </div>
         )}
@@ -719,44 +828,57 @@ export default function AdminKaryawanPage() {
                         <StatusBadge status={emp.status} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                              <MoreVertical className="w-4 h-4 text-slate-500" />
+                        <div className="flex items-center justify-end gap-1.5">
+                          {emp.status === 'pending' && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleQuickApprove(emp.id)}
+                              className="h-7 px-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white gap-1 shadow-xs cursor-pointer"
+                              title="Setujui pendaftaran karyawan ini"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Setujui</span>
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="text-xs">
-                            <DropdownMenuItem onClick={() => handleOpenDetail(emp)} className="gap-2">
-                              <Eye className="w-3.5 h-3.5 text-blue-500" />
-                              <span>Lihat Detail</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleOpenEdit(emp)} className="gap-2">
-                              <Edit className="w-3.5 h-3.5 text-slate-500" />
-                              <span>Edit Profil</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setTargetQuotaEmpId(emp.id)
-                                setQuotaOpen(true)
-                              }}
-                              className="gap-2"
-                            >
-                              <CalendarPlus className="w-3.5 h-3.5 text-emerald-500" />
-                              <span>Tambah Kuota Cuti</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setTargetDeleteEmp(emp)
-                                setDeleteConfirmOpen(true)
-                              }}
-                              className="gap-2 text-rose-600 focus:text-rose-600"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Hapus / Nonaktifkan</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                <MoreVertical className="w-4 h-4 text-slate-500" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="text-xs">
+                              <DropdownMenuItem onClick={() => handleOpenDetail(emp)} className="gap-2">
+                                <Eye className="w-3.5 h-3.5 text-blue-500" />
+                                <span>Lihat Detail</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenEdit(emp)} className="gap-2">
+                                <Edit className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Edit Profil</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setTargetQuotaEmpId(emp.id)
+                                  setQuotaOpen(true)
+                                }}
+                                className="gap-2"
+                              >
+                                <CalendarPlus className="w-3.5 h-3.5 text-emerald-500" />
+                                <span>Tambah Kuota Cuti</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setTargetDeleteEmp(emp)
+                                  setDeleteConfirmOpen(true)
+                                }}
+                                className="gap-2 text-rose-600 focus:text-rose-600"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Hapus / Nonaktifkan</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
@@ -780,15 +902,15 @@ export default function AdminKaryawanPage() {
 
       {/* Detail Modal */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-2xl">
           <DialogHeader>
             <div className="flex items-center justify-between pr-6">
-              <DialogTitle className="text-base font-bold">
+              <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">
                 {selectedEmployee?.full_name}
               </DialogTitle>
               {selectedEmployee && <StatusBadge status={selectedEmployee.status} />}
             </div>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-xs text-slate-600 dark:text-slate-300">
               Profil lengkap pegawai, kuota cuti tahun berjalan, dan data pinjaman
             </DialogDescription>
           </DialogHeader>
@@ -935,12 +1057,12 @@ export default function AdminKaryawanPage() {
 
       {/* Create / Edit Modal */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">
+            <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">
               {isEditing ? 'Edit Data Karyawan' : 'Tambah Karyawan Baru'}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-xs text-slate-600 dark:text-slate-300">
               Lengkapi informasi identitas pegawai, penempatan kerja, dan rekening bank
             </DialogDescription>
           </DialogHeader>
@@ -956,24 +1078,24 @@ export default function AdminKaryawanPage() {
             {/* Row 1: NIK & Nama */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">NIK (16 Digit)*</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">NIK (16 Digit)*</Label>
                 <Input
                   maxLength={16}
                   disabled={isEditing}
                   placeholder="3201012304900001"
                   value={formData.nik}
                   onChange={(e) => setFormData({ ...formData, nik: e.target.value.replace(/\D/g, '') })}
-                  className="font-mono text-xs h-9"
+                  className="font-mono text-xs h-9 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Nama Lengkap*</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Nama Lengkap*</Label>
                 <Input
                   placeholder="Nama sesuai KTP"
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  className="text-xs h-9"
+                  className="text-xs h-9 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   required
                 />
               </div>
@@ -982,22 +1104,22 @@ export default function AdminKaryawanPage() {
             {/* Row 2: Email & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Email</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Email</Label>
                 <Input
                   type="email"
                   placeholder="karyawan@ekopi.id"
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="text-xs h-9"
+                  className="text-xs h-9 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Nomor Telepon / WhatsApp</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Nomor Telepon / WhatsApp</Label>
                 <Input
                   placeholder="081234567890"
                   value={formData.phone || ''}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="text-xs h-9"
+                  className="text-xs h-9 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -1005,25 +1127,25 @@ export default function AdminKaryawanPage() {
             {/* Row 3: Start Date & Status */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Tanggal Mulai Kerja*</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Tanggal Mulai Kerja*</Label>
                 <Input
                   type="date"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  className="text-xs h-9"
+                  className="text-xs h-9 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Status Karyawan</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Status Karyawan</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(val: any) => setFormData({ ...formData, status: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Pilih Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                     <SelectItem value="approved">Aktif (Approved)</SelectItem>
                     <SelectItem value="pending">Menunggu Persetujuan</SelectItem>
                     <SelectItem value="rejected">Ditolak</SelectItem>
@@ -1035,15 +1157,15 @@ export default function AdminKaryawanPage() {
             {/* Row 4: Company & Site */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Perusahaan</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Perusahaan</Label>
                 <Select
                   value={formData.company_id || ''}
                   onValueChange={(val) => setFormData({ ...formData, company_id: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Pilih Perusahaan" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                     {companies.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
@@ -1053,15 +1175,15 @@ export default function AdminKaryawanPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Site / Lokasi</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Site / Lokasi</Label>
                 <Select
                   value={formData.site_id || ''}
                   onValueChange={(val) => setFormData({ ...formData, site_id: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Pilih Site" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                     {sites.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name}
@@ -1075,15 +1197,15 @@ export default function AdminKaryawanPage() {
             {/* Row 5: Dept & Position */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Departemen</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Departemen</Label>
                 <Select
                   value={formData.department_id || ''}
                   onValueChange={(val) => setFormData({ ...formData, department_id: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Pilih Departemen" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                     {departments.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
                         {d.name}
@@ -1093,15 +1215,15 @@ export default function AdminKaryawanPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Jabatan</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Jabatan</Label>
                 <Select
                   value={formData.position_id || ''}
                   onValueChange={(val) => setFormData({ ...formData, position_id: val })}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Pilih Jabatan" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                     {positions.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.name}
@@ -1115,20 +1237,20 @@ export default function AdminKaryawanPage() {
             {/* Row 6: Bank & Account */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Nama Bank</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Nama Bank</Label>
                 <Input
                   value={formData.bank_name || 'Mandiri'}
                   onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                  className="text-xs h-9"
+                  className="text-xs h-9 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-semibold">Nomor Rekening</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Nomor Rekening</Label>
                 <Input
                   placeholder="1440012345678"
                   value={formData.account_number || ''}
                   onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
-                  className="text-xs h-9 font-mono"
+                  className="text-xs h-9 font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -1158,27 +1280,27 @@ export default function AdminKaryawanPage() {
 
       {/* Add Leave Quota Modal */}
       <Dialog open={quotaOpen} onOpenChange={setQuotaOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-800">
+            <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">
               Tambah Kuota Cuti Tahunan
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-xs text-slate-600 dark:text-slate-300">
               Jatah kuota cuti akan dialokasikan ke buku besar cuti pegawai
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleAddQuotaSubmit} className="space-y-4 py-2 text-xs">
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">Tahun Berlaku</Label>
+              <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Tahun Berlaku</Label>
               <Select
                 value={String(quotaYear)}
                 onValueChange={(val) => setQuotaYear(parseInt(val, 10))}
               >
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                   <SelectValue placeholder="Pilih Tahun" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                   <SelectItem value="2024">2024</SelectItem>
                   <SelectItem value="2025">2025</SelectItem>
                   <SelectItem value="2026">2026</SelectItem>
@@ -1188,25 +1310,25 @@ export default function AdminKaryawanPage() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">Jumlah Hari Kuota</Label>
+              <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Jumlah Hari Kuota</Label>
               <Input
                 type="number"
                 min={1}
                 max={30}
                 value={quotaAmount}
                 onChange={(e) => setQuotaAmount(e.target.value)}
-                className="h-9 text-xs"
+                className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"
                 required
               />
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">Keterangan / Alasan</Label>
+              <Label className="text-xs font-semibold text-slate-800 dark:text-slate-100">Keterangan / Alasan</Label>
               <Input
                 placeholder="Contoh: Alokasi tahunan reguler / Bonus kuota"
                 value={quotaDescription}
                 onChange={(e) => setQuotaDescription(e.target.value)}
-                className="h-9 text-xs"
+                className="h-9 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
 
@@ -1242,6 +1364,18 @@ export default function AdminKaryawanPage() {
         confirmText="Ya, Hapus/Nonaktifkan"
         variant="destructive"
         onConfirm={handleDeleteEmployee}
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={bulkDeleteConfirmOpen}
+        onOpenChange={setBulkDeleteConfirmOpen}
+        title={`Hapus ${selectedIds.length} Karyawan Terpilih?`}
+        description="Data karyawan yang Anda pilih akan dinonaktifkan secara massal dari sistem. Tindakan ini dapat dipulihkan jika diperlukan."
+        confirmText="Ya, Hapus Massal"
+        cancelText="Batal"
+        variant="destructive"
+        onConfirm={handleBulkDelete}
       />
 
       {/* Import Excel Modal */}

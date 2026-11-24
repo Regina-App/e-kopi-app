@@ -181,7 +181,7 @@ export default function LoginPage() {
               id="nik"
               type="text"
               inputMode="numeric"
-              pattern="[0-9]*"
+              maxLength={19}
               autoComplete="off"
               value={displayNIK}
               onChange={handleNIKChange}

@@ -15,12 +15,15 @@ import {
   Bell,
   Info,
   LogOut,
+  History,
 } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, match: '/dashboard' },
   { href: '/cuti/ajukan', label: 'Cuti', icon: CalendarDays, match: '/cuti' },
   { href: '/koperasi/ajukan', label: 'Koperasi', icon: Landmark, match: '/koperasi' },
+  { href: '/riwayat', label: 'Riwayat', icon: History, match: '/riwayat' },
   { href: '/profil', label: 'Profil', icon: UserCircle, match: '/profil' },
 ]
 
@@ -48,20 +51,22 @@ export default function EmployeeLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* Desktop Sidebar (lg:flex) */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 flex-col bg-white border-r border-slate-200 z-50">
-        <div className="h-16 flex items-center gap-3 px-6 border-b border-slate-200">
-          <Image
-            src="/images/logo.png"
-            alt="E-KOPI Logo"
-            width={32}
-            height={32}
-            className="rounded-lg object-contain"
-          />
-          <div>
-            <div className="font-bold text-blue-600 text-base leading-tight">E-KOPI</div>
-            <div className="text-[11px] text-slate-400 font-medium">By Regina - Employee</div>
+      <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/images/logo.png"
+              alt="E-KOPI Logo"
+              width={32}
+              height={32}
+              className="rounded-lg object-contain"
+            />
+            <div>
+              <div className="font-bold text-blue-600 dark:text-blue-400 text-base leading-tight">E-KOPI</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">By Regina - Employee</div>
+            </div>
           </div>
         </div>
 
@@ -78,44 +83,45 @@ export default function EmployeeLayout({
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600 font-semibold'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
                 <span>{item.label}</span>
               </Link>
             )
           })}
 
-          <div className="pt-4 mt-4 border-t border-slate-200">
+          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
             <Link
               href="/tentang"
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 pathname === '/tentang'
-                  ? 'bg-blue-50 text-blue-600 font-semibold'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Info className={`w-5 h-5 ${pathname === '/tentang' ? 'text-blue-600' : 'text-slate-400'}`} />
+              <Info className={`w-5 h-5 ${pathname === '/tentang' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
               <span>Tentang</span>
             </Link>
           </div>
         </nav>
 
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+            className="flex items-center gap-3 flex-1 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
           >
             <LogOut className="w-5 h-5 text-red-500" />
             <span>Keluar</span>
           </button>
+          <ThemeToggle />
         </div>
       </aside>
 
       {/* Top Header */}
-      <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40 px-4 flex items-center justify-between">
+      <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-40 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <Image
             src="/images/logo.png"
@@ -124,20 +130,23 @@ export default function EmployeeLayout({
             height={28}
             className="rounded-md object-contain"
           />
-          <span className="text-sm font-bold text-blue-600 tracking-tight">E-KOPI</span>
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400 tracking-tight">E-KOPI</span>
         </div>
-        <button
-          type="button"
-          aria-label="Notifikasi"
-          className="relative p-2 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-        >
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full" />
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            type="button"
+            aria-label="Notifikasi"
+            className="relative p-2 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full" />
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
-      <main className="lg:ml-64 pt-16 pb-24 lg:pb-12 px-4 min-h-screen bg-slate-50">
+      <main className="lg:ml-64 pt-16 pb-24 lg:pb-12 px-4 min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
         {children}
       </main>
 
@@ -146,8 +155,8 @@ export default function EmployeeLayout({
       <TemanReginaBot />
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50 pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-4 h-16">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-lg z-50 pb-[env(safe-area-inset-bottom)]">
+        <div className="grid grid-cols-5 h-16">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive =
@@ -159,11 +168,13 @@ export default function EmployeeLayout({
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center justify-center gap-1 transition-colors ${
-                  isActive ? 'text-blue-600 font-semibold' : 'text-slate-400'
+                  isActive
+                    ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
-                <span className="text-xs">{item.label}</span>
+                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <span className="text-[11px] font-medium leading-none">{item.label}</span>
               </Link>
             )
           })}
