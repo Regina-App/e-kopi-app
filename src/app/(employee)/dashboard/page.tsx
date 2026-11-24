@@ -215,42 +215,42 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 pt-4 text-xs">
           <div>
-            <span className="text-slate-400 block flex items-center gap-1">
-              <Building className="h-3.5 w-3.5" /> Perusahaan
+            <span className="text-slate-600 dark:text-slate-400 font-medium block flex items-center gap-1">
+              <Building className="h-3.5 w-3.5 text-blue-600" /> Perusahaan
             </span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+            <span className="font-bold text-slate-900 dark:text-white mt-1 block truncate">
               {employee?.company_name || 'PT E-KOPI Nusantara'}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" /> Site / Lokasi
+            <span className="text-slate-600 dark:text-slate-400 font-medium block flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5 text-indigo-600" /> Site / Lokasi
             </span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+            <span className="font-bold text-slate-900 dark:text-white mt-1 block truncate">
               {employee?.site_name || 'Head Office'}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block">Departemen</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+            <span className="text-slate-600 dark:text-slate-400 font-medium block">Departemen</span>
+            <span className="font-bold text-slate-900 dark:text-white mt-1 block truncate">
               {employee?.department_name || 'Operasional'}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block">Jabatan</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+            <span className="text-slate-600 dark:text-slate-400 font-medium block">Jabatan</span>
+            <span className="font-bold text-slate-900 dark:text-white mt-1 block truncate">
               {employee?.position_name || 'Staff Lapangan'}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" /> Regu Kerja
+            <span className="text-slate-600 dark:text-slate-400 font-medium block flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5 text-emerald-600" /> Regu Kerja
             </span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">
+            <span className="font-bold text-slate-900 dark:text-white mt-1 block">
               {employee?.is_crew_member ? (employee.crew_name || 'Regu 1') : 'Non-Regu'}
             </span>
           </div>

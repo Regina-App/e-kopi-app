@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Total Pending
     const totalPending = pendingRegistrations + pendingLeave + pendingLoan
 
-    // 4. Monthly trends (Jan - Des) for targetYear
+    // 4. Monthly trends (Jan - Des) for targetYear based on REAL data
     const monthNames = [
       'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
       'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
@@ -109,34 +109,15 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Fallback sample trends if data is sparse (e.g. fresh installation)
-    const hasTrendsData = monthlyTrends.some((m) => m.cuti > 0 || m.koperasi > 0)
-    const finalMonthlyTrends = hasTrendsData
-      ? monthlyTrends
-      : [
-          { month: 'Jan', cuti: 4, koperasi: 2, cutiDays: 8, totalLoan: 12000000 },
-          { month: 'Feb', cuti: 7, koperasi: 3, cutiDays: 14, totalLoan: 18000000 },
-          { month: 'Mar', cuti: 5, koperasi: 4, cutiDays: 11, totalLoan: 25000000 },
-          { month: 'Apr', cuti: 12, koperasi: 5, cutiDays: 24, totalLoan: 30000000 },
-          { month: 'Mei', cuti: 8, koperasi: 3, cutiDays: 16, totalLoan: 20000000 },
-          { month: 'Jun', cuti: 6, koperasi: 4, cutiDays: 12, totalLoan: 22000000 },
-          { month: 'Jul', cuti: 9, koperasi: 6, cutiDays: 19, totalLoan: 35000000 },
-          { month: 'Agu', cuti: 11, koperasi: 4, cutiDays: 22, totalLoan: 28000000 },
-          { month: 'Sep', cuti: 5, koperasi: 3, cutiDays: 10, totalLoan: 18000000 },
-          { month: 'Okt', cuti: 8, koperasi: 5, cutiDays: 15, totalLoan: 32000000 },
-          { month: 'Nov', cuti: 7, koperasi: 4, cutiDays: 14, totalLoan: 24000000 },
-          { month: 'Des', cuti: 14, koperasi: 7, cutiDays: 30, totalLoan: 42000000 },
-        ]
-
-    // 5. Status breakdown (Pie Chart)
+    // 5. Real Status breakdown (Pie Chart)
     const totalApproved = approvedLeave + activeLoansCount + completedLoansCount
     const totalRejected = rejectedLeave + loanList.filter((l) => l.status === 'rejected').length
     const totalPendingAll = pendingLeave + pendingLoan + pendingRegistrations
 
     const statusBreakdown = [
-      { name: 'Disetujui', value: totalApproved || 18, color: '#10b981' },
-      { name: 'Menunggu', value: totalPendingAll || 5, color: '#f59e0b' },
-      { name: 'Ditolak', value: totalRejected || 3, color: '#ef4444' },
+      { name: 'Disetujui', value: totalApproved, color: '#10b981' },
+      { name: 'Menunggu', value: totalPendingAll, color: '#f59e0b' },
+      { name: 'Ditolak', value: totalRejected, color: '#ef4444' },
     ]
 
     // 6. Recent activity from audit_logs
@@ -158,18 +139,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       stats: {
-        totalEmployees: totalEmployees || empList.length || 24,
+        totalEmployees: totalEmployees,
         pendingRegistrations,
         pendingLeaveRequests: pendingLeave,
         pendingLoanRequests: pendingLoan,
         totalPendingRequests: totalPending,
-        thisMonthLeaveDays: thisMonthLeaveDays || 12,
-        activeLoansCount: activeLoansCount || 8,
-        totalActiveLoanAmount: totalActiveLoanAmount || 45000000,
+        thisMonthLeaveDays: thisMonthLeaveDays,
+        activeLoansCount: activeLoansCount,
+        totalActiveLoanAmount: totalActiveLoanAmount,
         approvedLeaveCount: approvedLeave,
         completedLoansCount,
       },
-      monthlyTrends: finalMonthlyTrends,
+      monthlyTrends,
       statusBreakdown,
       recentActivity,
     })

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import fs from 'fs/promises'
-import path from 'path'
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,23 +55,23 @@ export async function POST(req: NextRequest) {
           upsert: true,
         })
 
-      if (!uploadErr && uploadData) {
+      if (uploadErr) {
+        console.warn('[SettingsUpload] Supabase Storage upload error:', uploadErr.message)
+      } else if (uploadData) {
         const { data: urlData } = adminClient.storage.from('assets').getPublicUrl(cleanFilename)
         if (urlData?.publicUrl) {
           publicUrl = urlData.publicUrl
         }
       }
     } catch (storageErr) {
-      console.warn('[SettingsUpload] Supabase Storage upload skipped/failed:', storageErr)
+      console.warn('[SettingsUpload] Supabase Storage upload exception:', storageErr)
     }
 
-    // 2. Local Fallback in public/uploads/
+    // 2. Resilient Serverless Fallback (Base64 Data URL)
+    // Avoids local filesystem writes (fs.mkdir/fs.writeFile) which crash with ENOENT on Vercel read-only containers
     if (!publicUrl) {
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-      await fs.mkdir(uploadsDir, { recursive: true })
-      const localFilePath = path.join(uploadsDir, cleanFilename)
-      await fs.writeFile(localFilePath, buffer)
-      publicUrl = `/uploads/${cleanFilename}`
+      const base64Data = buffer.toString('base64')
+      publicUrl = `data:${file.type};base64,${base64Data}`
     }
 
     return NextResponse.json({

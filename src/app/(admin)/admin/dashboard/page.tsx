@@ -417,16 +417,35 @@ export default function AdminDashboardPage() {
         {/* Chart 1: Bar Chart (Cuti vs Koperasi per Bulan) */}
         <Card className="lg:col-span-2 shadow-xs border-slate-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-slate-800">
-              Pengajuan per Bulan ({selectedYear})
-            </CardTitle>
-            <CardDescription className="text-xs text-slate-500">
-              Perbandingan frekuensi permohonan Cuti vs Pinjaman Koperasi
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-bold text-slate-800">
+                  Pengajuan per Bulan ({selectedYear})
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Perbandingan frekuensi permohonan Cuti vs Pinjaman Koperasi
+                </CardDescription>
+              </div>
+              {monthlyTrends.every((m) => m.cuti === 0 && m.koperasi === 0) && (
+                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                  Data 0 (Bersih)
+                </span>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="pt-2">
             {loading ? (
               <div className="h-72 w-full bg-slate-100 rounded-lg animate-pulse" />
+            ) : monthlyTrends.every((m) => m.cuti === 0 && m.koperasi === 0) ? (
+              <div className="h-72 w-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 shadow-xs">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">Database Belum Memiliki Pengajuan</p>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                  Grafik bulanan tahun {selectedYear} saat ini bernilai 0. Diagram batang akan otomatis terisi secara dinamis saat karyawan mulai mengajukan cuti atau pinjaman.
+                </p>
+              </div>
             ) : (
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -466,6 +485,16 @@ export default function AdminDashboardPage() {
           <CardContent className="pt-2">
             {loading ? (
               <div className="h-72 w-full bg-slate-100 rounded-lg animate-pulse" />
+            ) : statusBreakdown.every((item) => item.value === 0) ? (
+              <div className="h-72 w-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2.5 shadow-xs">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">Tidak Ada Antrean Pengajuan</p>
+                <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                  Semua transaksi berstatus 0. Diagram lingkaran akan otomatis memetakan rasio Disetujui, Menunggu, dan Ditolak secara realtime.
+                </p>
+              </div>
             ) : (
               <div className="h-72 w-full flex flex-col items-center justify-center">
                 <ResponsiveContainer width="100%" height={220}>
@@ -524,6 +553,16 @@ export default function AdminDashboardPage() {
           <CardContent className="pt-2">
             {loading ? (
               <div className="h-64 w-full bg-slate-100 rounded-lg animate-pulse" />
+            ) : monthlyTrends.every((m) => m.cutiDays === 0) ? (
+              <div className="h-64 w-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2 shadow-xs">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">Belum Ada Pengambilan Cuti</p>
+                <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                  Rekap akumulasi hari cuti per bulan masih 0. Grafik garis akan terpetakan saat pengajuan cuti disetujui.
+                </p>
+              </div>
             ) : (
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -570,6 +609,16 @@ export default function AdminDashboardPage() {
           <CardContent className="pt-2">
             {loading ? (
               <div className="h-64 w-full bg-slate-100 rounded-lg animate-pulse" />
+            ) : monthlyTrends.every((m) => m.totalLoan === 0) ? (
+              <div className="h-64 w-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2 shadow-xs">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">Belum Ada Penyaluran Dana</p>
+                <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                  Total nominal pinjaman yang dicairkan masih Rp 0. Grafik akan diperbarui secara otomatis pasca pencairan dana.
+                </p>
+              </div>
             ) : (
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
