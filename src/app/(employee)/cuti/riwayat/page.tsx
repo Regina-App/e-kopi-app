@@ -27,6 +27,8 @@ import {
   Loader2,
   Inbox,
   Filter,
+  Mail,
+  Send,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -265,70 +267,32 @@ export default function RiwayatCutiPage() {
     }
   }
 
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null)
+
   // Handle PDF Download (for approved requests)
   const handleDownloadPDF = (request: LeaveRequestItem) => {
-    toast.info(`Mempersiapkan Surat Cuti Resmi untuk ${request.id}...`)
-    // Simulation / Direct print preview
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      const datesList = (request.selected_dates || [])
-        .map((d) => `<li>${formatDate(d, 'EEEE, dd MMMM yyyy')}</li>`)
-        .join('')
+    toast.info(`Membuka Surat Cuti Resmi #${request.id.slice(0, 8)}...`)
+    window.open(`/api/leave/letter/${request.id}`, '_blank')
+  }
 
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Surat Cuti Resmi - ${request.id}</title>
-          <style>
-            body { font-family: sans-serif; padding: 40px; color: #1e293b; max-width: 700px; margin: 0 auto; line-height: 1.6; }
-            .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; }
-            .header h1 { margin: 0; color: #1e3a8a; font-size: 22px; }
-            .header p { margin: 4px 0 0; color: #64748b; font-size: 13px; }
-            .box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0; }
-            .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-            .label { color: #64748b; font-weight: 500; }
-            .value { font-weight: 600; }
-            .dates { margin: 15px 0; padding-left: 20px; font-size: 14px; }
-            .footer { margin-top: 50px; display: flex; justify-content: space-between; text-align: center; font-size: 13px; }
-            .sign { margin-top: 60px; font-weight: bold; }
-            .stamp { color: #15803d; border: 2px solid #15803d; padding: 6px 16px; border-radius: 4px; display: inline-block; font-weight: bold; text-transform: uppercase; margin-top: 15px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>PT E-KOPI SUKSES MAKMUR</h1>
-            <p>Surat Izin Cuti Tahunan Resmi Karyawan</p>
-          </div>
-          <div class="box">
-            <div class="row"><span class="label">Nomor Pengajuan:</span><span class="value">${request.id}</span></div>
-            <div class="row"><span class="label">Kode Verifikasi:</span><span class="value" style="font-family: monospace; letter-spacing: 2px;">${request.verification_code || '-'}</span></div>
-            <div class="row"><span class="label">Status:</span><span class="value" style="color: #15803d;">DISETUJUI</span></div>
-            <div class="row"><span class="label">Tanggal Pengajuan:</span><span class="value">${formatDateTime(request.created_at)}</span></div>
-            <div class="row"><span class="label">Total Durasi:</span><span class="value">${request.total_days} Hari Kerja</span></div>
-          </div>
-          <h3>Rincian Hari Cuti:</h3>
-          <ul class="dates">${datesList}</ul>
-          <p><strong>Alasan:</strong> ${request.reason}</p>
-          <p><strong>Kontak Darurat Selama Cuti:</strong> ${request.emergency_contact}</p>
-          <div class="footer">
-            <div>
-              <p>Pemohon Cuti,</p>
-              <div class="sign">Karyawan Bersangkutan</div>
-            </div>
-            <div>
-              <p>Disetujui Oleh Admin,</p>
-              <div class="stamp">VERIFIED &amp; APPROVED</div>
-              <div class="sign" style="margin-top: 15px;">${request.processed_by_admin?.name || 'Administrator HRD'}</div>
-            </div>
-          </div>
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
-        </body>
-        </html>
-      `)
-      printWindow.document.close()
+  // Handle Send to Registered Email
+  const handleSendEmail = async (request: LeaveRequestItem) => {
+    setSendingEmailId(request.id)
+    toast.info(`Mengirim Surat Cuti Resmi #${request.id.slice(0, 8)} ke email terdaftar...`)
+    try {
+      const res = await fetch(`/api/leave/letter/${request.id}/email`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Surat cuti resmi berhasil dikirim ke email!')
+      } else {
+        toast.error(data.error || 'Gagal mengirim surat cuti ke email')
+      }
+    } catch {
+      toast.error('Terjadi gangguan jaringan saat mengirim email')
+    } finally {
+      setSendingEmailId(null)
     }
   }
 
@@ -582,18 +546,34 @@ export default function RiwayatCutiPage() {
 
                       {/* Action */}
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleViewDetail(item)
-                          }}
-                          className="h-8 px-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1" />
-                          Detail
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          {item.status === 'approved' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title="Unduh Surat Cuti Resmi"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDownloadPDF(item)
+                              }}
+                              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            >
+                              <FileDown className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleViewDetail(item)
+                            }}
+                            className="h-8 px-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            Detail
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
@@ -659,9 +639,24 @@ export default function RiwayatCutiPage() {
                   {/* Footer */}
                   <div className="flex items-center justify-between text-xs text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2.5">
                     <span>Diajukan: {formatDate(item.created_at, 'dd MMM yyyy')}</span>
-                    <span className="text-blue-600 font-semibold flex items-center gap-1">
-                      Lihat Rincian <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                      {item.status === 'approved' && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDownloadPDF(item)
+                          }}
+                          className="text-emerald-600 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                        >
+                          <FileDown className="h-3.5 w-3.5" />
+                          <span>Surat Cuti</span>
+                        </button>
+                      )}
+                      <span className="text-blue-600 font-semibold flex items-center gap-1">
+                        Lihat Rincian <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               )
@@ -842,16 +837,32 @@ export default function RiwayatCutiPage() {
                   </Button>
                 )}
 
-                {/* PDF Download for approved */}
+                {/* PDF Download & Email for approved */}
                 {selectedRequest.status === 'approved' && (
-                  <Button
-                    type="button"
-                    onClick={() => handleDownloadPDF(selectedRequest)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
-                  >
-                    <FileDown className="h-4 w-4" />
-                    Unduh Surat Cuti (PDF)
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={sendingEmailId === selectedRequest.id}
+                      onClick={() => handleSendEmail(selectedRequest)}
+                      className="gap-1.5 text-xs text-slate-700 hover:text-slate-900 border-slate-300"
+                    >
+                      {sendingEmailId === selectedRequest.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                      ) : (
+                        <Mail className="h-4 w-4 text-blue-600" />
+                      )}
+                      <span>Kirim ke Email</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleDownloadPDF(selectedRequest)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5 text-xs font-semibold shadow-sm"
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Unduh Surat Cuti (PDF)
+                    </Button>
+                  </div>
                 )}
 
                 <Button

@@ -182,7 +182,30 @@ export default function AdminKaryawanPage() {
     duplicates: number
     errors: string[]
   } | null>(null)
+  const [exporting, setExporting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Export Excel Database
+  const handleExportDatabase = async () => {
+    setExporting(true)
+    try {
+      const res = await fetch('/api/admin/employees/export')
+      if (!res.ok) throw new Error('Gagal mengunduh database')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Database_Karyawan_PT_E-KOPI_${new Date().toISOString().split('T')[0]}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      alert('Terjadi kesalahan saat mengunduh database.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   // Load master data once
   useEffect(() => {
@@ -496,6 +519,16 @@ export default function AdminKaryawanPage() {
         }
         actions={
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportDatabase}
+              disabled={exporting}
+              className="h-9 gap-1.5 text-xs text-blue-700 hover:text-blue-800 bg-blue-50/60 hover:bg-blue-100/80 border-blue-200 transition-colors"
+            >
+              <Download className={`w-4 h-4 text-blue-600 ${exporting ? 'animate-bounce' : ''}`} />
+              <span>{exporting ? 'Mengunduh...' : 'Unduh Database'}</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"

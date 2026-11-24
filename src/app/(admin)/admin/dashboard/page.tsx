@@ -14,6 +14,12 @@ import {
   Building2,
   MapPin,
   Calendar,
+  Sparkles,
+  Crown,
+  FileSpreadsheet,
+  Settings,
+  ShieldCheck,
+  FileBarChart,
 } from 'lucide-react'
 import {
   BarChart,
@@ -90,6 +96,45 @@ export default function AdminDashboardPage() {
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([])
   const [sites, setSites] = useState<{ id: string; name: string }[]>([])
 
+  // Admin user & Greeting state
+  const [adminName, setAdminName] = useState<string>('Pemilik & Super Admin')
+  const [adminRole, setAdminRole] = useState<string>('Super Admin')
+  const [greetingText, setGreetingText] = useState<string>('Selamat Datang')
+  const [currentDateStr, setCurrentDateStr] = useState<string>('')
+
+  // Set greeting & current date on mount
+  useEffect(() => {
+    const hours = new Date().getHours()
+    if (hours < 11) setGreetingText('Selamat Pagi')
+    else if (hours < 15) setGreetingText('Selamat Siang')
+    else if (hours < 18) setGreetingText('Selamat Sore')
+    else setGreetingText('Selamat Malam')
+
+    try {
+      setCurrentDateStr(
+        new Intl.DateTimeFormat('id-ID', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }).format(new Date())
+      )
+    } catch {
+      setCurrentDateStr(new Date().toLocaleDateString())
+    }
+
+    // Fetch active session info
+    fetch('/api/admin/auth/session')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.admin?.name) {
+          setAdminName(d.admin.name)
+          setAdminRole(d.admin.role === 'super_admin' ? 'Pemilik & Super Admin' : 'Administrator')
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   // Filters state
   const [selectedYear, setSelectedYear] = useState<string>('2025')
   const [selectedCompany, setSelectedCompany] = useState<string>('all')
@@ -145,14 +190,72 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6 pb-12">
+      {/* 1. ULTRA-PREMIUM OWNER & ADMIN GREETING CARD */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-6 sm:p-8 text-white shadow-xl border border-blue-900/40">
+        <div className="absolute right-0 top-0 -mt-10 -mr-10 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute left-1/3 bottom-0 -mb-10 h-48 w-48 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-md">
+                <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <span>{adminRole}</span>
+              </span>
+              {currentDateStr && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-slate-300 backdrop-blur-md">
+                  <Sparkles className="w-3 h-3 text-amber-300" />
+                  <span>{currentDateStr}</span>
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white drop-shadow-xs">
+              {greetingText},{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-indigo-200 to-amber-200">
+                {adminName}!
+              </span>
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+              Selamat datang di Panel Kontrol Manajemen PT E-KOPI Sukses Makmur. Akses langsung pengaturan Master Perusahaan, database kepegawaian, serta laporan resmi siap cetak.
+            </p>
+          </div>
+
+          {/* Quick Access Actions */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <Link
+              href="/admin/master-perusahaan"
+              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/15 backdrop-blur-md transition-all shadow-sm"
+            >
+              <Building2 className="w-4 h-4 text-blue-400" />
+              <span>Master Perusahaan</span>
+            </Link>
+            <Link
+              href="/admin/karyawan"
+              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 active:scale-95 text-white shadow-md shadow-blue-900/30 transition-all"
+            >
+              <Users className="w-4 h-4" />
+              <span>Database Karyawan</span>
+            </Link>
+            <Link
+              href="/admin/laporan"
+              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 text-white shadow-md shadow-emerald-950/30 transition-all"
+            >
+              <FileBarChart className="w-4 h-4" />
+              <span>Laporan Cetak</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Page Title & Filter Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Dashboard Utama
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Ringkasan statistik operasional, permohonan cuti, dan pinjaman koperasi
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            Ringkasan Statistik & Operasional
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Analisis metrik permohonan cuti, pinjaman koperasi aktif, dan tren bulanan
           </p>
         </div>
 
