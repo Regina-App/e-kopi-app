@@ -48,7 +48,7 @@ const QUICK_ACTIONS = [
     bgColor: 'bg-emerald-50 hover:bg-emerald-100/80 border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900',
   },
   {
-    href: '/cuti',
+    href: '/cuti/riwayat',
     label: 'Riwayat Cuti',
     desc: 'Daftar pengajuan cuti',
     icon: History,
@@ -56,7 +56,7 @@ const QUICK_ACTIONS = [
     bgColor: 'bg-purple-50 hover:bg-purple-100/80 border-purple-100 dark:bg-purple-950/40 dark:border-purple-900',
   },
   {
-    href: '/koperasi',
+    href: '/koperasi/riwayat',
     label: 'Riwayat Koperasi',
     desc: 'Status pinjaman & angsuran',
     icon: Wallet,

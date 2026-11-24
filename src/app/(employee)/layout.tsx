@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
+import AnnouncementPopup from '@/components/AnnouncementPopup'
+import TemanReginaBot from '@/components/TemanReginaBot'
 import {
   LayoutDashboard,
   CalendarDays,
@@ -14,10 +16,10 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/cuti', label: 'Cuti', icon: CalendarDays },
-  { href: '/koperasi', label: 'Koperasi', icon: Landmark },
-  { href: '/profil', label: 'Profil', icon: UserCircle },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, match: '/dashboard' },
+  { href: '/cuti/ajukan', label: 'Cuti', icon: CalendarDays, match: '/cuti' },
+  { href: '/koperasi/ajukan', label: 'Koperasi', icon: Landmark, match: '/koperasi' },
+  { href: '/profil', label: 'Profil', icon: UserCircle, match: '/profil' },
 ]
 
 export default function EmployeeLayout({
@@ -55,7 +57,7 @@ export default function EmployeeLayout({
             const Icon = item.icon
             const isActive =
               pathname === item.href ||
-              (item.href !== '/dashboard' && pathname?.startsWith(item.href))
+              (item.match !== '/dashboard' && pathname?.startsWith(item.match))
 
             return (
               <Link
@@ -126,6 +128,10 @@ export default function EmployeeLayout({
         {children}
       </main>
 
+      {/* Interactive Announcement Popup & AI Smart Bot */}
+      <AnnouncementPopup />
+      <TemanReginaBot />
+
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50 pb-[env(safe-area-inset-bottom)]">
         <div className="grid grid-cols-4 h-16">
@@ -133,7 +139,7 @@ export default function EmployeeLayout({
             const Icon = item.icon
             const isActive =
               pathname === item.href ||
-              (item.href !== '/dashboard' && pathname?.startsWith(item.href))
+              (item.match !== '/dashboard' && pathname?.startsWith(item.match))
 
             return (
               <Link

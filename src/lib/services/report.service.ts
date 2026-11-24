@@ -463,7 +463,7 @@ export async function generateLeaveExcel(
   summaryLabel.alignment = { vertical: 'middle', horizontal: 'right' }
 
   const totalDaysCell = sheet.getCell(`I${summaryRowNum}`)
-  totalDaysCell.value = totalDaysSum
+  totalDaysCell.value = data.length > 0 ? { formula: `SUM(I6:I${data.length + 5})`, result: totalDaysSum } : totalDaysSum
   totalDaysCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E3A8A' } }
   totalDaysCell.alignment = { vertical: 'middle', horizontal: 'right' }
   totalDaysCell.numFmt = '#,##0'
@@ -677,25 +677,25 @@ export async function generateLoanExcel(
   summaryLabel.alignment = { vertical: 'middle', horizontal: 'right' }
 
   const loanSumCell = sheet.getCell(`H${summaryRowNum}`)
-  loanSumCell.value = totalLoanSum
+  loanSumCell.value = data.length > 0 ? { formula: `SUM(H6:H${data.length + 5})`, result: totalLoanSum } : totalLoanSum
   loanSumCell.numFmt = '"Rp "#,##0'
   loanSumCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E3A8A' } }
   loanSumCell.alignment = { vertical: 'middle', horizontal: 'right' }
 
   const instSumCell = sheet.getCell(`J${summaryRowNum}`)
-  instSumCell.value = totalInstallmentSum
+  instSumCell.value = data.length > 0 ? { formula: `SUM(J6:J${data.length + 5})`, result: totalInstallmentSum } : totalInstallmentSum
   instSumCell.numFmt = '"Rp "#,##0'
   instSumCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E3A8A' } }
   instSumCell.alignment = { vertical: 'middle', horizontal: 'right' }
 
   const obligSumCell = sheet.getCell(`K${summaryRowNum}`)
-  obligSumCell.value = totalObligationSum
+  obligSumCell.value = data.length > 0 ? { formula: `SUM(K6:K${data.length + 5})`, result: totalObligationSum } : totalObligationSum
   obligSumCell.numFmt = '"Rp "#,##0'
   obligSumCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E3A8A' } }
   obligSumCell.alignment = { vertical: 'middle', horizontal: 'right' }
 
   const netSumCell = sheet.getCell(`L${summaryRowNum}`)
-  netSumCell.value = totalNetSum
+  netSumCell.value = data.length > 0 ? { formula: `SUM(L6:L${data.length + 5})`, result: totalNetSum } : totalNetSum
   netSumCell.numFmt = '"Rp "#,##0'
   netSumCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF15803D' } }
   netSumCell.alignment = { vertical: 'middle', horizontal: 'right' }

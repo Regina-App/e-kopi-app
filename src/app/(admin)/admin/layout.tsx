@@ -11,6 +11,10 @@ import {
   History,
   Users,
   Shield,
+  Building2,
+  FileBarChart,
+  ScrollText,
+  Settings,
   Menu,
   X,
   Search,
@@ -19,10 +23,14 @@ import {
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/master-perusahaan', label: 'Master Perusahaan', icon: Building2 },
   { href: '/admin/pengajuan-cuti', label: 'Pengajuan Cuti', icon: CalendarCheck },
   { href: '/admin/pengajuan-koperasi', label: 'Pengajuan Koperasi', icon: Landmark },
   { href: '/admin/riwayat', label: 'Riwayat', icon: History },
   { href: '/admin/karyawan', label: 'Database Karyawan', icon: Users },
+  { href: '/admin/laporan', label: 'Laporan (Excel & PDF)', icon: FileBarChart },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: ScrollText },
+  { href: '/admin/pengaturan', label: 'Pengaturan Sistem', icon: Settings },
   { href: '/admin/manajemen-admin', label: 'Manajemen Admin', icon: Shield },
 ]
 

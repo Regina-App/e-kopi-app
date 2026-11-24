@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
+import AnnouncementPopup from '@/components/AnnouncementPopup'
 
 export default function AuthLayout({
   children,
@@ -23,6 +24,7 @@ export default function AuthLayout({
       >
         {children}
       </motion.div>
+      <AnnouncementPopup />
     </div>
   )
 }
