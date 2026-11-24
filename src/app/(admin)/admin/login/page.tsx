@@ -123,12 +123,6 @@ export default function AdminLoginPage() {
     }
   }
 
-  const fillDefaultAdmin = () => {
-    setEmail('mohammadrizal6666@gmail.com')
-    setPin('1111')
-    setError(null)
-  }
-
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col justify-center items-center px-4 relative overflow-hidden">
       {/* Background Glows */}
@@ -234,18 +228,6 @@ export default function AdminLoginPage() {
               )}
             </Button>
           </form>
-
-          {/* Quick Credential Helper */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-            <span>Kredensial bawaan:</span>
-            <button
-              type="button"
-              onClick={fillDefaultAdmin}
-              className="text-blue-400 hover:text-blue-300 transition-colors font-medium underline underline-offset-4"
-            >
-              Super Admin (1111)
-            </button>
-          </div>
         </div>
 
         {/* Footer info */}

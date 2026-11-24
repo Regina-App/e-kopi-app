@@ -307,7 +307,59 @@ export async function generateLeaveExcel(
   workbook.lastModifiedBy = 'E-KOPI By Regina - App'
   workbook.created = new Date()
 
-  const sheet = workbook.addWorksheet('Laporan Cuti', {
+  const adminClient = createAdminClient()
+  const currentYear = filters.year || new Date().getFullYear()
+  const companyName = settings.companyName || 'E-KOPI BY REGINA - APP'
+  const periodStr = getPeriodLabel(filters)
+
+  // 1. Fetch employees & leave balances for Sheet 1
+  let empQuery = adminClient
+    .from('employees')
+    .select(`
+      id, nik, full_name, start_date, is_crew_member, is_active, status,
+      company:companies(name),
+      site:sites(name),
+      department:departments(name),
+      position:positions(name)
+    `)
+    .eq('is_deleted', false)
+    .order('nik', { ascending: true })
+
+  if (filters.companyId && filters.companyId !== 'all') {
+    empQuery = empQuery.eq('company_id', filters.companyId)
+  }
+  if (filters.siteId && filters.siteId !== 'all') {
+    empQuery = empQuery.eq('site_id', filters.siteId)
+  }
+
+  const { data: employees } = await empQuery
+
+  const { data: ledgers } = await adminClient
+    .from('leave_balance_ledger')
+    .select('employee_id, type, amount')
+    .eq('year', currentYear)
+
+  const balanceMap: Record<string, { total: number; used: number; available: number }> = {}
+  if (ledgers) {
+    for (const entry of (ledgers as any[])) {
+      if (!balanceMap[entry.employee_id]) {
+        balanceMap[entry.employee_id] = { total: 0, used: 0, available: 0 }
+      }
+      if (entry.type === 'allocation' || entry.type === 'carry_forward' || entry.type === 'adjustment') {
+        balanceMap[entry.employee_id].total += Number(entry.amount || 0)
+      } else if (entry.type === 'usage') {
+        balanceMap[entry.employee_id].used += Math.abs(Number(entry.amount || 0))
+      }
+    }
+    for (const empId of Object.keys(balanceMap)) {
+      balanceMap[empId].available = balanceMap[empId].total - balanceMap[empId].used
+    }
+  }
+
+  // ==========================================
+  // SHEET 1: REKAPITULASI KUOTA & SALDO CUTI
+  // ==========================================
+  const sheet1 = workbook.addWorksheet('Rekap Kuota & Saldo Cuti', {
     pageSetup: {
       paperSize: 9, // A4
       orientation: 'landscape',
@@ -318,38 +370,213 @@ export async function generateLeaveExcel(
     views: [{ state: 'frozen', xSplit: 0, ySplit: 5 }],
   })
 
-  const companyName = settings.companyName || 'E-KOPI BY REGINA - APP'
-  const periodStr = getPeriodLabel(filters)
+  // Sheet 1 Titles
+  sheet1.mergeCells('A1:L1')
+  const title1A = sheet1.getCell('A1')
+  title1A.value = companyName.toUpperCase()
+  title1A.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } }
+  title1A.alignment = { vertical: 'middle', horizontal: 'center' }
+  title1A.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } }
+  sheet1.getRow(1).height = 30
 
-  // Title Row 1 - Company
-  sheet.mergeCells('A1:L1')
-  const titleCell1 = sheet.getCell('A1')
-  titleCell1.value = companyName.toUpperCase()
-  titleCell1.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF0F172A' } }
-  titleCell1.alignment = { vertical: 'middle', horizontal: 'center' }
+  sheet1.mergeCells('A2:L2')
+  const title1B = sheet1.getCell('A2')
+  title1B.value = `REKAPITULASI KUOTA & SALDO CUTI KARYAWAN TAHUN ${currentYear}`
+  title1B.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF0F172A' } }
+  title1B.alignment = { vertical: 'middle', horizontal: 'center' }
 
-  // Title Row 2 - Report Title
-  sheet.mergeCells('A2:L2')
-  const titleCell2 = sheet.getCell('A2')
-  titleCell2.value = 'LAPORAN REKAPITULASI PENGAJUAN CUTI KARYAWAN'
-  titleCell2.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF1E3A8A' } }
-  titleCell2.alignment = { vertical: 'middle', horizontal: 'center' }
+  sheet1.mergeCells('A3:L3')
+  const title1C = sheet1.getCell('A3')
+  title1C.value = `Periode: ${periodStr} | Total Pegawai Terdata: ${employees?.length || 0} | Dicetak: ${formatDate(new Date(), 'dd MMMM yyyy HH:mm')} WIB`
+  title1C.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF475569' } }
+  title1C.alignment = { vertical: 'middle', horizontal: 'center' }
 
-  // Title Row 3 - Period & Meta
-  sheet.mergeCells('A3:L3')
-  const titleCell3 = sheet.getCell('A3')
-  titleCell3.value = `Periode: ${periodStr} | Dicetak: ${formatDate(
-    new Date(),
-    'dd MMMM yyyy HH:mm'
-  )} WIB`
-  titleCell3.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF475569' } }
-  titleCell3.alignment = { vertical: 'middle', horizontal: 'center' }
+  sheet1.getRow(4).height = 10
 
-  // Row 4 is blank
-  sheet.getRow(4).height = 10
+  // Sheet 1 Headers
+  const headers1 = [
+    'NO',
+    'NIK',
+    'NAMA KARYAWAN',
+    'PERUSAHAAN',
+    'SITE / LOKASI',
+    'DEPARTEMEN',
+    'JABATAN',
+    'HAK KUOTA CUTI',
+    'CUTI TERPAKAI',
+    'SISA SALDO CUTI',
+    'PERSENTASE PEMAKAIAN',
+    'STATUS KARYAWAN',
+  ]
+  const headerRow1 = sheet1.getRow(5)
+  headerRow1.values = headers1
+  headerRow1.height = 26
+  headerRow1.eachCell((cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } }
+    cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } }
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
+      left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+    }
+  })
 
-  // Header Row 5
-  const headers = [
+  // Sheet 1 Data Rows
+  const empList = employees || []
+  empList.forEach((emp: any, idx: number) => {
+    const rowNum = idx + 6
+    const row = sheet1.getRow(rowNum)
+    const empBalance = balanceMap[emp.id] || { total: 0, used: 0, available: 0 }
+    const statusLabel = emp.status === 'approved' ? 'Aktif' : emp.status === 'pending' ? 'Pending' : 'Non-Aktif'
+
+    row.values = [
+      idx + 1,
+      emp.nik || '-',
+      emp.full_name || '-',
+      emp.company?.name || '-',
+      emp.site?.name || '-',
+      emp.department?.name || '-',
+      emp.position?.name || '-',
+      empBalance.total,
+      empBalance.used,
+      { formula: `H${rowNum}-I${rowNum}`, result: empBalance.available },
+      { formula: `IF(H${rowNum}>0, I${rowNum}/H${rowNum}, 0)`, result: empBalance.total > 0 ? empBalance.used / empBalance.total : 0 },
+      statusLabel,
+    ]
+
+    row.height = 20
+    row.eachCell((cell, colNumber) => {
+      cell.font = { name: 'Arial', size: 9.5 }
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+      }
+      cell.alignment = { vertical: 'middle' }
+
+      if (colNumber === 1 || colNumber === 2 || colNumber === 12) {
+        cell.alignment = { vertical: 'middle', horizontal: 'center' }
+      }
+      if (colNumber === 8 || colNumber === 9 || colNumber === 10) {
+        cell.alignment = { vertical: 'middle', horizontal: 'right' }
+        cell.numFmt = '#,##0'
+      }
+      if (colNumber === 11) {
+        cell.alignment = { vertical: 'middle', horizontal: 'right' }
+        cell.numFmt = '0.0%'
+      }
+    })
+
+    if (idx % 2 === 1) {
+      row.eachCell((cell) => {
+        if (!cell.fill || cell.fill.type !== 'pattern') {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } }
+        }
+      })
+    }
+  })
+
+  // Sheet 1 Summary Row with Formulas
+  const summaryRow1Num = empList.length + 6
+  const summaryRow1 = sheet1.getRow(summaryRow1Num)
+  sheet1.mergeCells(`A${summaryRow1Num}:G${summaryRow1Num}`)
+  const summaryLabel1 = sheet1.getCell(`A${summaryRow1Num}`)
+  summaryLabel1.value = `TOTAL REKAPITULASI (${empList.length} PEGAWAI)`
+  summaryLabel1.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0F172A' } }
+  summaryLabel1.alignment = { vertical: 'middle', horizontal: 'right' }
+
+  const totalQuotaCell = sheet1.getCell(`H${summaryRow1Num}`)
+  totalQuotaCell.value = empList.length > 0 ? { formula: `SUM(H6:H${empList.length + 5})` } : 0
+  totalQuotaCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E3A8A' } }
+  totalQuotaCell.numFmt = '#,##0'
+  totalQuotaCell.alignment = { vertical: 'middle', horizontal: 'right' }
+
+  const totalUsedCell = sheet1.getCell(`I${summaryRow1Num}`)
+  totalUsedCell.value = empList.length > 0 ? { formula: `SUM(I6:I${empList.length + 5})` } : 0
+  totalUsedCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFB91C1C' } }
+  totalUsedCell.numFmt = '#,##0'
+  totalUsedCell.alignment = { vertical: 'middle', horizontal: 'right' }
+
+  const totalRemCell = sheet1.getCell(`J${summaryRow1Num}`)
+  totalRemCell.value = empList.length > 0 ? { formula: `SUM(J6:J${empList.length + 5})` } : 0
+  totalRemCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF15803D' } }
+  totalRemCell.numFmt = '#,##0'
+  totalRemCell.alignment = { vertical: 'middle', horizontal: 'right' }
+
+  const avgUsageCell = sheet1.getCell(`K${summaryRow1Num}`)
+  avgUsageCell.value = empList.length > 0 ? { formula: `AVERAGE(K6:K${empList.length + 5})` } : 0
+  avgUsageCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0F172A' } }
+  avgUsageCell.numFmt = '0.0%'
+  avgUsageCell.alignment = { vertical: 'middle', horizontal: 'right' }
+
+  summaryRow1.height = 24
+  summaryRow1.eachCell({ includeEmpty: true }, (cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } }
+    cell.border = {
+      top: { style: 'medium', color: { argb: 'FF0F172A' } },
+      bottom: { style: 'double', color: { argb: 'FF0F172A' } },
+      left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+    }
+  })
+
+  sheet1.columns = [
+    { key: 'no', width: 6 },
+    { key: 'nik', width: 14 },
+    { key: 'name', width: 26 },
+    { key: 'company', width: 22 },
+    { key: 'site', width: 18 },
+    { key: 'department', width: 20 },
+    { key: 'position', width: 20 },
+    { key: 'quota', width: 16 },
+    { key: 'used', width: 15 },
+    { key: 'available', width: 16 },
+    { key: 'pct', width: 18 },
+    { key: 'status', width: 16 },
+  ]
+  sheet1.autoFilter = `A5:L${empList.length + 5}`
+
+  // ==========================================
+  // SHEET 2: DETAIL PENGAJUAN CUTI KARYAWAN
+  // ==========================================
+  const sheet2 = workbook.addWorksheet('Detail Pengajuan Cuti', {
+    pageSetup: {
+      paperSize: 9, // A4
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+    },
+    views: [{ state: 'frozen', xSplit: 0, ySplit: 5 }],
+  })
+
+  // Sheet 2 Titles
+  sheet2.mergeCells('A1:L1')
+  const title2A = sheet2.getCell('A1')
+  title2A.value = companyName.toUpperCase()
+  title2A.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } }
+  title2A.alignment = { vertical: 'middle', horizontal: 'center' }
+  title2A.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } }
+  sheet2.getRow(1).height = 30
+
+  sheet2.mergeCells('A2:L2')
+  const title2B = sheet2.getCell('A2')
+  title2B.value = 'RINCIAN RIWAYAT PENGAJUAN CUTI KARYAWAN'
+  title2B.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF1E3A8A' } }
+  title2B.alignment = { vertical: 'middle', horizontal: 'center' }
+
+  sheet2.mergeCells('A3:L3')
+  const title2C = sheet2.getCell('A3')
+  title2C.value = `Periode: ${periodStr} | Total Pengajuan: ${data.length} | Dicetak: ${formatDate(new Date(), 'dd MMMM yyyy HH:mm')} WIB`
+  title2C.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF475569' } }
+  title2C.alignment = { vertical: 'middle', horizontal: 'center' }
+
+  sheet2.getRow(4).height = 10
+
+  const headers2 = [
     'NO',
     'ID PENGAJUAN',
     'NIK',
@@ -364,16 +591,11 @@ export async function generateLeaveExcel(
     'STATUS',
   ]
 
-  const headerRow = sheet.getRow(5)
-  headerRow.values = headers
-  headerRow.height = 26
-
-  headerRow.eachCell((cell) => {
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF1E3A8A' },
-    }
+  const headerRow2 = sheet2.getRow(5)
+  headerRow2.values = headers2
+  headerRow2.height = 26
+  headerRow2.eachCell((cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } }
     cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } }
     cell.alignment = { vertical: 'middle', horizontal: 'center' }
     cell.border = {
@@ -384,12 +606,10 @@ export async function generateLeaveExcel(
     }
   })
 
-  // Data Rows
   let totalDaysSum = 0
-
   data.forEach((item, index) => {
     const rowNum = index + 6
-    const row = sheet.getRow(rowNum)
+    const row = sheet2.getRow(rowNum)
     totalDaysSum += item.totalDays
 
     const datesFormatted = item.selectedDates.map((d) => formatDate(d, 'dd/MM')).join(', ')
@@ -410,8 +630,6 @@ export async function generateLeaveExcel(
     ]
 
     row.height = 20
-
-    // Styling per cell
     row.eachCell((cell, colNumber) => {
       cell.font = { name: 'Arial', size: 9.5 }
       cell.border = {
@@ -441,40 +659,33 @@ export async function generateLeaveExcel(
       }
     })
 
-    // Zebra striping
     if (index % 2 === 1) {
       row.eachCell((cell) => {
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFF8FAFC' },
+        if (!cell.fill || cell.fill.type !== 'pattern') {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } }
         }
       })
     }
   })
 
-  // Summary Row at bottom
-  const summaryRowNum = data.length + 6
-  const summaryRow = sheet.getRow(summaryRowNum)
-  sheet.mergeCells(`A${summaryRowNum}:H${summaryRowNum}`)
-  const summaryLabel = sheet.getCell(`A${summaryRowNum}`)
-  summaryLabel.value = `TOTAL KESELURUHAN (${data.length} PENGAJUAN)`
-  summaryLabel.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0F172A' } }
-  summaryLabel.alignment = { vertical: 'middle', horizontal: 'right' }
+  // Sheet 2 Summary Row
+  const summaryRow2Num = data.length + 6
+  const summaryRow2 = sheet2.getRow(summaryRow2Num)
+  sheet2.mergeCells(`A${summaryRow2Num}:H${summaryRow2Num}`)
+  const summaryLabel2 = sheet2.getCell(`A${summaryRow2Num}`)
+  summaryLabel2.value = `TOTAL KESELURUHAN (${data.length} PENGAJUAN)`
+  summaryLabel2.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF0F172A' } }
+  summaryLabel2.alignment = { vertical: 'middle', horizontal: 'right' }
 
-  const totalDaysCell = sheet.getCell(`I${summaryRowNum}`)
+  const totalDaysCell = sheet2.getCell(`I${summaryRow2Num}`)
   totalDaysCell.value = data.length > 0 ? { formula: `SUM(I6:I${data.length + 5})`, result: totalDaysSum } : totalDaysSum
   totalDaysCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF1E3A8A' } }
   totalDaysCell.alignment = { vertical: 'middle', horizontal: 'right' }
   totalDaysCell.numFmt = '#,##0'
 
-  summaryRow.height = 24
-  summaryRow.eachCell({ includeEmpty: true }, (cell) => {
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE2E8F0' },
-    }
+  summaryRow2.height = 24
+  summaryRow2.eachCell({ includeEmpty: true }, (cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } }
     cell.border = {
       top: { style: 'medium', color: { argb: 'FF0F172A' } },
       bottom: { style: 'double', color: { argb: 'FF0F172A' } },
@@ -483,8 +694,7 @@ export async function generateLeaveExcel(
     }
   })
 
-  // Column widths
-  sheet.columns = [
+  sheet2.columns = [
     { key: 'no', width: 6 },
     { key: 'id', width: 22 },
     { key: 'nik', width: 14 },
@@ -498,9 +708,7 @@ export async function generateLeaveExcel(
     { key: 'reason', width: 30 },
     { key: 'status', width: 14 },
   ]
-
-  // Auto-filter
-  sheet.autoFilter = `A5:L${data.length + 5}`
+  sheet2.autoFilter = `A5:L${data.length + 5}`
 
   const buffer = await workbook.xlsx.writeBuffer()
   return Buffer.from(buffer)
@@ -1055,6 +1263,104 @@ export function generateReportPDF(
     `
       )
       .join('')
+  } else if (type === 'combined') {
+    title = 'LAPORAN GABUNGAN PENGAJUAN CUTI & PINJAMAN KOPERASI'
+    const leaveData: LeaveReportItem[] = Array.isArray(data) ? data : ((data as any).leaveData || [])
+    const loanData: LoanReportItem[] = Array.isArray(data) ? [] : ((data as any).loanData || [])
+
+    const totalLeaveRequests = leaveData.length
+    const totalLeaveDays = leaveData.reduce((acc, curr) => acc + (curr.totalDays || 0), 0)
+    const totalLoans = loanData.length
+    const totalDisbursed = loanData.reduce((acc, curr) => acc + (curr.loanAmount || 0), 0)
+
+    summaryHtml = `
+      <div class="summary-cards">
+        <div class="card"><div class="val">${totalLeaveRequests}</div><div class="lbl">Pengajuan Cuti</div></div>
+        <div class="card"><div class="val">${totalLeaveDays}</div><div class="lbl">Total Hari Cuti</div></div>
+        <div class="card"><div class="val">${totalLoans}</div><div class="lbl">Pinjaman Koperasi</div></div>
+        <div class="card"><div class="val" style="color:#15803d;">${formatRupiah(totalDisbursed)}</div><div class="lbl">Total Pinjaman Dicairkan</div></div>
+      </div>
+    `
+
+    const leaveRows =
+      leaveData.length > 0
+        ? leaveData
+            .map(
+              (row, idx) => `
+      <tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td style="font-family:monospace;font-size:11px;">${row.id}</td>
+        <td>${row.nik}</td>
+        <td><strong>${row.fullName}</strong></td>
+        <td>${row.companyName || '-'}</td>
+        <td style="text-align:center;"><strong>${row.totalDays} Hari</strong></td>
+        <td>${row.reason || '-'}</td>
+        <td style="text-align:center;"><span class="badge badge-${row.status}">${row.status.toUpperCase()}</span></td>
+      </tr>
+    `
+            )
+            .join('')
+        : '<tr><td colspan="8" style="text-align:center;padding:12px;color:#94a3b8;">Tidak ada data cuti untuk periode ini</td></tr>'
+
+    const loanRows =
+      loanData.length > 0
+        ? loanData
+            .map(
+              (row, idx) => `
+      <tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td style="font-family:monospace;font-size:11px;">${row.id}</td>
+        <td>${row.nik}</td>
+        <td><strong>${row.fullName}</strong></td>
+        <td style="text-align:right;"><strong>${formatRupiah(row.loanAmount)}</strong></td>
+        <td style="text-align:center;">${row.tenor} Bln</td>
+        <td style="text-align:right;">${formatRupiah(row.installmentPerMonth)}</td>
+        <td style="text-align:right;color:#15803d;"><strong>${formatRupiah(row.netDisbursement)}</strong></td>
+        <td style="text-align:center;"><span class="badge badge-${row.status}">${row.status.toUpperCase()}</span></td>
+      </tr>
+    `
+            )
+            .join('')
+        : '<tr><td colspan="9" style="text-align:center;padding:12px;color:#94a3b8;">Tidak ada data pinjaman untuk periode ini</td></tr>'
+
+    tableRowsHtml = `
+      <div style="margin-top:16px;">
+        <h3 style="margin:12px 0 6px;color:#1e3a8a;font-size:13px;text-transform:uppercase;border-bottom:2px solid #93c5fd;padding-bottom:4px;">A. Rekapitulasi Pengajuan Cuti</h3>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:4%;">NO</th>
+              <th style="width:14%;">ID PENGAJUAN</th>
+              <th style="width:10%;">NIK</th>
+              <th style="width:18%;">NAMA KARYAWAN</th>
+              <th style="width:14%;">PERUSAHAAN</th>
+              <th style="width:10%;">TOTAL HARI</th>
+              <th style="width:18%;">ALASAN</th>
+              <th style="width:12%;">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>${leaveRows}</tbody>
+        </table>
+
+        <h3 style="margin:20px 0 6px;color:#1e3a8a;font-size:13px;text-transform:uppercase;border-bottom:2px solid #93c5fd;padding-bottom:4px;">B. Rekapitulasi Pinjaman Koperasi</h3>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:4%;">NO</th>
+              <th style="width:13%;">ID PINJAMAN</th>
+              <th style="width:10%;">NIK</th>
+              <th style="width:17%;">NAMA KARYAWAN</th>
+              <th style="width:14%;">JUMLAH PINJAMAN</th>
+              <th style="width:8%;">TENOR</th>
+              <th style="width:12%;">ANGSURAN/BLN</th>
+              <th style="width:12%;">NET CAIR</th>
+              <th style="width:10%;">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>${loanRows}</tbody>
+        </table>
+      </div>
+    `
   }
 
   return `<!DOCTYPE html>
@@ -1091,6 +1397,13 @@ export function generateReportPDF(
   .btnbar button{background:#1d4ed8;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(29,78,216,0.35);}
   @media print{.btnbar{display:none;}body{padding:0;}}
 </style>
+<script>
+  window.onload = function() {
+    setTimeout(function() {
+      window.print();
+    }, 400);
+  };
+</script>
 </head>
 <body>
   <div class="btnbar"><button onclick="window.print()">🖨️ Cetak / Simpan PDF (A4 Landscape)</button></div>
@@ -1103,10 +1416,16 @@ export function generateReportPDF(
     <div class="period">Periode: ${periodStr}</div>
   </div>
   ${summaryHtml}
+  ${
+    type === 'combined'
+      ? tableRowsHtml
+      : `
   <table>
     <thead>${tableHeaderHtml}</thead>
     <tbody>${tableRowsHtml}</tbody>
   </table>
+  `
+  }
   <div class="meta-footer">
     <div>Dicetak oleh: <strong>${generatedBy}</strong> pada ${printDate} WIB</div>
     <div>Sistem E-KOPI By Regina - App &copy; ${new Date().getFullYear()}</div>

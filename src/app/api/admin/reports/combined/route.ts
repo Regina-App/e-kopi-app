@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   generateCombinedReport,
   generateCombinedExcel,
+  generateReportPDF,
   type ReportFilters,
 } from '@/lib/services/report.service'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -56,6 +57,16 @@ export async function GET(req: NextRequest) {
           'Content-Type':
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="${filename}"`,
+        },
+      })
+    }
+
+    if (format === 'pdf') {
+      const html = generateReportPDF({ leaveData, loanData } as any, 'combined', reportSettings, filters)
+      return new NextResponse(html, {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `inline; filename="Laporan-Gabungan-${Date.now()}.html"`,
         },
       })
     }

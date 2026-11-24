@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import AnnouncementPopup from '@/components/AnnouncementPopup'
 import TemanReginaBot from '@/components/TemanReginaBot'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   LayoutDashboard,
   CalendarDays,
@@ -29,9 +31,20 @@ export default function EmployeeLayout({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
 
-  const handleLogout = () => {
-    router.push('/login')
+  const handleConfirmLogout = async () => {
+    setLoggingOut(true)
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch {
+      // Ignore
+    } finally {
+      setLoggingOut(false)
+      setShowLogoutConfirm(false)
+      router.push('/login')
+    }
   }
 
   return (
@@ -92,8 +105,8 @@ export default function EmployeeLayout({
 
         <div className="p-4 border-t border-slate-200">
           <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
           >
             <LogOut className="w-5 h-5 text-red-500" />
             <span>Keluar</span>
@@ -156,6 +169,19 @@ export default function EmployeeLayout({
           })}
         </div>
       </nav>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Konfirmasi Keluar Akun"
+        description="Apakah Anda yakin ingin mengakhiri sesi dan keluar dari akun karyawan E-KOPI?"
+        confirmText="Ya, Keluar Akun"
+        cancelText="Batal"
+        variant="destructive"
+        loading={loggingOut}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   )
 }

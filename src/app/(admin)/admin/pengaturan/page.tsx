@@ -18,6 +18,9 @@ import {
   RefreshCw,
   Info,
   X,
+  HardDriveDownload,
+  Download,
+  ShieldCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -35,7 +38,7 @@ interface MasterItem {
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<
-    'identitas' | 'perusahaan' | 'master' | 'cuti' | 'koperasi' | 'aset'
+    'identitas' | 'perusahaan' | 'master' | 'cuti' | 'koperasi' | 'aset' | 'backup'
   >('identitas')
   const [activeMasterSubTab, setActiveMasterSubTab] = useState<
     'companies' | 'sites' | 'departments' | 'positions' | 'crews'
@@ -362,6 +365,7 @@ export default function AdminSettingsPage() {
           { key: 'cuti', label: 'Cuti', icon: Calendar },
           { key: 'koperasi', label: 'Koperasi', icon: Wallet },
           { key: 'aset', label: 'Aset', icon: ImageIcon },
+          { key: 'backup', label: 'Cadangan Data', icon: HardDriveDownload },
         ].map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
@@ -1059,6 +1063,52 @@ export default function AdminSettingsPage() {
                   )}
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 7. CADANGAN DATA (BACKUP) */}
+      {activeTab === 'backup' && (
+        <Card className="border-slate-200 shadow-xs">
+          <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
+            <div className="flex items-center gap-2 text-blue-700">
+              <HardDriveDownload className="w-5 h-5" />
+              <CardTitle className="text-base font-bold">Cadangan Lengkap Database Sistem</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Unduh salinan cadangan instan seluruh database (Perusahaan, Site, Departemen, Jabatan, Regu, Pegawai, Cuti, Saldo, dan Pinjaman) dalam format JSON terstruktur untuk proteksi data berkala.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 flex items-start gap-3">
+              <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-blue-900 space-y-1">
+                <p className="font-semibold">Proteksi Data Terpusat</p>
+                <p className="text-blue-700 leading-relaxed">
+                  Cadangan ini mencakup 13 tabel relasional inti, termasuk seluruh data pegawai aktif, buku besar saldo cuti, dan riwayat pengajuan pinjaman koperasi. Simpan file ini di tempat yang aman.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div>
+                <h4 className="text-sm font-bold text-slate-800">Snapshot Backup 1-Klik</h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Format file: .json | Tanggal backup: Real-time saat diunduh
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => {
+                  toast.info('Memulai pengunduhan cadangan database...')
+                  window.open('/api/admin/backup', '_blank')
+                }}
+                className="bg-blue-600 hover:bg-blue-500 text-white font-semibold gap-2 shadow-sm cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Unduh Cadangan Database</span>
+              </Button>
             </div>
           </CardContent>
         </Card>

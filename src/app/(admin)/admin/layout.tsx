@@ -20,6 +20,7 @@ import {
   Search,
   LogOut,
 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -84,13 +85,20 @@ export default function AdminLayout({
       (item.href !== '/admin/dashboard' && pathname?.startsWith(item.href))
   )
 
-  const handleLogout = async () => {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const handleConfirmLogout = async () => {
+    setLoggingOut(true)
     try {
       await fetch('/api/admin/auth/logout', { method: 'POST' })
     } catch {
       // Ignore
+    } finally {
+      setLoggingOut(false)
+      setShowLogoutConfirm(false)
+      router.push('/admin/login')
     }
-    router.push('/admin/login')
   }
 
   return (
@@ -179,10 +187,10 @@ export default function AdminLayout({
               </span>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               title="Keluar"
               aria-label="Keluar"
-              className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -228,6 +236,19 @@ export default function AdminLayout({
           {children}
         </div>
       </main>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Konfirmasi Keluar Sesi Admin"
+        description="Apakah Anda yakin ingin mengakhiri sesi dan keluar dari Panel Administrator PT E-KOPI?"
+        confirmText="Ya, Keluar Akun"
+        cancelText="Batal"
+        variant="destructive"
+        loading={loggingOut}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   )
 }
