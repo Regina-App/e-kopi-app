@@ -23,6 +23,12 @@ import {
   APP_VERSION,
   APP_DEVELOPER,
 } from '@/lib/constants'
+import {
+  WhatsAppLogo,
+  GmailLogo,
+  CS_WHATSAPP_URL,
+  CS_GMAIL_URL,
+} from '@/components/CsContactButtons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -168,24 +174,44 @@ export default function AboutPage() {
         </div>
 
         {/* Contact/Help card */}
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
           <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
             <Info className="h-4 w-4 text-blue-600" />
             <span>Bantuan & Dukungan Teknis</span>
           </div>
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-              <Mail className="h-4 w-4 text-slate-400" />
-              <span>Email: support@ekopi.app / hrd@perusahaan.com</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-              <Phone className="h-4 w-4 text-slate-400" />
-              <span>WhatsApp Admin: +62 812-3456-7890</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <span>Jam Layanan: Senin - Jumat (08:00 - 17:00 WIB)</span>
-            </div>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Butuh bantuan terkait akun, pengajuan cuti, atau pinjaman koperasi? Hubungi langsung Customer Service resmi melalui tombol di bawah:
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <a
+              href={CS_WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Hubungi WhatsApp Customer Service"
+              className="flex flex-col sm:flex-row items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100/80 active:scale-95 border border-emerald-200/80 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 transition-all shadow-xs group cursor-pointer"
+            >
+              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-xs group-hover:scale-110 transition-transform">
+                <WhatsAppLogo className="w-7 h-7" />
+              </div>
+              <span className="text-xs font-bold tracking-tight">WhatsApp CS</span>
+            </a>
+
+            <a
+              href={CS_GMAIL_URL}
+              aria-label="Kirim Pesan ke Gmail Customer Service"
+              className="flex flex-col sm:flex-row items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-red-50 hover:bg-red-100/80 active:scale-95 border border-red-200/80 text-red-800 dark:bg-red-950/40 dark:border-red-800 dark:text-red-300 transition-all shadow-xs group cursor-pointer"
+            >
+              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-xs group-hover:scale-110 transition-transform">
+                <GmailLogo className="w-7 h-7" />
+              </div>
+              <span className="text-xs font-bold tracking-tight">Gmail CS</span>
+            </a>
+          </div>
+
+          <div className="flex items-center gap-2 text-slate-500 text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            <span>Layanan Respons Cepat: Senin – Sabtu (08:00 – 17:00 WIB)</span>
           </div>
         </div>
       </motion.div>

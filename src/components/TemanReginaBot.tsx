@@ -122,7 +122,7 @@ export default function TemanReginaBot() {
     }
 
     // Default Fallback
-    return 'Pertanyaan menarik! Mengenai ' + query + ', silakan cek menu Cuti atau Koperasi di aplikasi Anda. Anda juga bisa menghubungi layanan Customer Service resmi E-KOPI di WhatsApp 0812-3456-7890 jika membutuhkan bantuan khusus.'
+    return 'Pertanyaan menarik! Mengenai ' + query + ', silakan cek menu Cuti atau Koperasi di aplikasi Anda. Anda juga bisa menghubungi Customer Service resmi E-KOPI By Regina - App melalui tombol WhatsApp CS atau Gmail CS di halaman Tentang & Announcement jika membutuhkan bantuan langsung.'
   }
 
   const handleSend = (textToSend?: string) => {

@@ -18,6 +18,12 @@ import {
   Mail,
   ExternalLink,
 } from 'lucide-react'
+import {
+  WhatsAppLogo,
+  GmailLogo,
+  CS_WHATSAPP_URL,
+  CS_GMAIL_URL,
+} from './CsContactButtons'
 
 interface AnnouncementPopupProps {
   forceShow?: boolean
@@ -219,24 +225,28 @@ export default function AnnouncementPopup({ forceShow = false }: AnnouncementPop
                       >
                         <div className="p-4 pt-1 border-t border-slate-800/80 text-xs sm:text-sm text-slate-300 leading-relaxed space-y-3">
                           <p>Jika mengalami kendala akun, NIK tidak terdaftar, atau masalah pengajuan, tim layanan kami siap membantu:</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          <div className="grid grid-cols-2 gap-3 pt-1">
                             <a
-                              href="https://wa.me/6281234567890?text=Halo%20Admin%20E-KOPI,%20saya%20butuh%20bantuan"
+                              href={CS_WHATSAPP_URL}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 transition-all font-medium"
+                              aria-label="WhatsApp Customer Service"
+                              className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25 active:scale-95 transition-all font-semibold group cursor-pointer"
                             >
-                              <Phone className="w-4 h-4 text-emerald-400" />
-                              <span>WhatsApp CS Resmi</span>
-                              <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-70" />
+                              <div className="p-1.5 rounded-xl bg-slate-900 group-hover:scale-110 transition-transform">
+                                <WhatsAppLogo className="w-5 h-5" />
+                              </div>
+                              <span className="text-xs">WhatsApp CS</span>
                             </a>
                             <a
-                              href="mailto:help@ekopi.app"
-                              className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 hover:bg-blue-500/20 transition-all font-medium"
+                              href={CS_GMAIL_URL}
+                              aria-label="Gmail Customer Service"
+                              className="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-300 hover:bg-red-500/25 active:scale-95 transition-all font-semibold group cursor-pointer"
                             >
-                              <Mail className="w-4 h-4 text-blue-400" />
-                              <span>Email Bantuan CS</span>
-                              <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-70" />
+                              <div className="p-1.5 rounded-xl bg-slate-900 group-hover:scale-110 transition-transform">
+                                <GmailLogo className="w-5 h-5" />
+                              </div>
+                              <span className="text-xs">Gmail CS</span>
                             </a>
                           </div>
                           <p className="text-[11px] text-slate-400">Jam Layanan Operasional: Senin – Sabtu (08.00 – 17.00 WIB)</p>
